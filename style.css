@@ -1247,7 +1247,6 @@ img {
     gap: 10px;
   }
 
-
   .filter-buttons {
     gap: 8px;
     width: 100%;
@@ -1367,6 +1366,21 @@ img {
     max-height: calc(100vh - 200px);
     overflow-y: auto;
   }
+
+  /* Prevent iOS Safari from auto-zooming on form focus by ensuring
+     form controls have a minimum font-size of 16px. This is a common
+     workaround: when font-size < 16px Safari will zoom to make text
+     readable. We keep visual font smaller by scaling inside if needed. */
+  input,
+  select,
+  textarea,
+  button {
+    font-size: 16px; /* prevents iOS auto-zoom */
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* If you want smaller visual text while keeping 16px for browser,
+     you can scale inner placeholder/labels separately. */
 
   .detail-row {
     flex-direction: column;
