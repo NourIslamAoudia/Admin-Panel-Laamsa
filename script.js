@@ -301,27 +301,105 @@ async function viewOrder(id) {
   const modal = document.getElementById("detailsModal");
   const modalBody = document.getElementById("detailsModalBody");
 
+  // Gestion des réseaux sociaux
   let socialLinksHtml = "";
-  if (order.reseaux_sociaux) {
-    const socials = order.reseaux_sociaux;
-    socialLinksHtml = '<div class="social-links">';
+  let hasSocials = false;
 
-    if (socials.facebook) {
-      socialLinksHtml += `<a href="${socials.facebook}" target="_blank"><i class="fab fa-facebook"></i> ${socials.facebook}</a>`;
-    }
-    if (socials.instagram) {
-      socialLinksHtml += `<a href="https://instagram.com/${socials.instagram}" target="_blank"><i class="fab fa-instagram"></i> ${socials.instagram}</a>`;
-    }
-    if (socials.linkedin) {
-      socialLinksHtml += `<a href="${socials.linkedin}" target="_blank"><i class="fab fa-linkedin"></i> ${socials.linkedin}</a>`;
-    }
-    if (socials.twitter) {
-      socialLinksHtml += `<a href="https://twitter.com/${socials.twitter}" target="_blank"><i class="fab fa-twitter"></i> ${socials.twitter}</a>`;
-    }
+  // Vérifier si les réseaux sociaux existent
+  const socials = order.reseaux_sociaux || order.reseauxSociaux || "";
 
-    socialLinksHtml += "</div>";
-  } else {
-    socialLinksHtml = "<p>Aucun réseau social</p>";
+  socialLinksHtml = '<div class="social-links">';
+
+  if (socials && typeof socials === "string" && socials.trim()) {
+    hasSocials = true;
+
+    // Parser le texte pour extraire les réseaux sociaux
+    // Format possible: "Instagram: @webfast.dz" ou "@islam.lemgale3" ou "Facebook: fb.com/page"
+    const socialText = socials.trim();
+    const lines = socialText.split(/[,\n]/); // Séparer par virgule ou nouvelle ligne
+
+    lines.forEach((line) => {
+      line = line.trim();
+      if (!line) return;
+
+      // Détection Instagram
+      if (line.toLowerCase().includes("instagram") || line.includes("@")) {
+        const igMatch = line.match(/@([a-zA-Z0-9._]+)/);
+        if (igMatch) {
+          const igHandle = igMatch[0]; // Avec le @
+          const igLink = `https://instagram.com/${igHandle.replace("@", "")}`;
+          socialLinksHtml += `<a href="${igLink}" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram"></i> Instagram: ${escapeHtml(
+            igHandle
+          )}</a>`;
+        } else {
+          // Format "Instagram: username" sans @
+          const username = line.replace(/instagram:/i, "").trim();
+          if (username) {
+            const igLink = `https://instagram.com/${username.replace("@", "")}`;
+            socialLinksHtml += `<a href="${igLink}" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram"></i> Instagram: ${escapeHtml(
+              username
+            )}</a>`;
+          }
+        }
+      }
+      // Détection Facebook
+      else if (
+        line.toLowerCase().includes("facebook") ||
+        line.toLowerCase().includes("fb.com")
+      ) {
+        let fbLink = line.replace(/facebook:/i, "").trim();
+        if (!fbLink.startsWith("http")) {
+          fbLink = `https://${fbLink}`;
+        }
+        socialLinksHtml += `<a href="${escapeHtml(
+          fbLink
+        )}" target="_blank" rel="noopener noreferrer"><i class="fab fa-facebook"></i> Facebook</a>`;
+      }
+      // Détection LinkedIn
+      else if (line.toLowerCase().includes("linkedin")) {
+        let liLink = line.replace(/linkedin:/i, "").trim();
+        if (!liLink.startsWith("http")) {
+          liLink = `https://linkedin.com/in/${liLink}`;
+        }
+        socialLinksHtml += `<a href="${escapeHtml(
+          liLink
+        )}" target="_blank" rel="noopener noreferrer"><i class="fab fa-linkedin"></i> LinkedIn</a>`;
+      }
+      // Détection Twitter/X
+      else if (
+        line.toLowerCase().includes("twitter") ||
+        line.toLowerCase().includes("x.com")
+      ) {
+        let twLink = line.replace(/twitter:|x:/i, "").trim();
+        if (!twLink.startsWith("http")) {
+          twLink = `https://twitter.com/${twLink.replace("@", "")}`;
+        }
+        socialLinksHtml += `<a href="${escapeHtml(
+          twLink
+        )}" target="_blank" rel="noopener noreferrer"><i class="fab fa-twitter"></i> Twitter/X</a>`;
+      }
+      // Lien générique (si contient http)
+      else if (line.includes("http")) {
+        socialLinksHtml += `<a href="${escapeHtml(
+          line
+        )}" target="_blank" rel="noopener noreferrer"><i class="fas fa-link"></i> ${escapeHtml(
+          line
+        )}</a>`;
+      }
+      // Texte simple
+      else {
+        socialLinksHtml += `<p><i class="fas fa-share-alt"></i> ${escapeHtml(
+          line
+        )}</p>`;
+      }
+    });
+  }
+
+  socialLinksHtml += "</div>";
+
+  if (!hasSocials) {
+    socialLinksHtml =
+      '<p style="color: #999; font-style: italic;">Aucun réseau social renseigné</p>';
   }
 
   modalBody.innerHTML = `
